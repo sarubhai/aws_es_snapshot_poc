@@ -26,6 +26,3 @@ terraform.rc
 
 # Mac
 .DS_Store
-
-# Ignore saml metadata xml
-saml-metadata.xml
