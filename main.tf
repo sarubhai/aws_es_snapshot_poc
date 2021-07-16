@@ -93,7 +93,7 @@ resource "aws_elasticsearch_domain_policy" "access_policy" {
             "Action": "es:ESHttp*",
             "Principal": {
                 "AWS": "*"
-            }
+            },
             "Effect": "Allow",
             "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.prefix}-elasticsearch/*"
         }
