@@ -1,0 +1,193 @@
+PUT _opendistro/_ism/policies/manage-movie-indices
+{
+    "policy": {
+        "policy_id": "manage-movie-indices",
+        "description": "snapshot to external S3 repository & delete movie indices after 1 day",
+        "default_state": "hot",
+        "schema_version": 1,
+        "states": [
+            {
+                "name": "hot",
+                "actions": [],
+                "transitions": [
+                    {
+                        "state_name": "snapshot",
+                        "conditions": {
+                            "min_index_age": "1d"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "snapshot",
+                "actions": [
+                    {
+                        "snapshot": {
+                            "repository": "bkp-repo",
+                            "snapshot": "{{ctx.index}}"
+                        }
+                    }
+                ],
+                "transitions": [
+                    {
+                        "state_name": "delete"
+                    }
+                ]
+            },
+            {
+                "name": "delete",
+                "actions": [
+                    {
+                        "delete": {}
+                    }
+                ],
+                "transitions": []
+            }
+        ],
+        "ism_template": {
+            "index_patterns": ["movie-*"],
+            "priority": 100
+        }
+    }
+}
+
+PUT _template/movie-index-template
+{
+    "index_patterns": [
+        "movie-*"
+    ],
+    "mappings": {
+        "properties": {
+            "@timestamp": {
+                "type": "date"
+            },
+            "watched_at": {
+                "type": "date"
+            },
+            "movie_name": {
+                "type": "keyword"
+            },
+            "release_year": {
+                "type": "integer"
+            },
+            "app_name": {
+                "type": "keyword"
+            }
+        }
+    },
+    "settings": {
+        "index": {
+            "number_of_replicas": "2",
+            "number_of_shards": "3",
+            "mapping.ignore_malformed": true
+        }
+    }
+}
+
+PUT _ingest/pipeline/movie-pipeline-daily
+{
+    "description": "Daily Indices",
+    "processors": [
+        {
+            "date_index_name": {
+                "field": "watched_at",
+                "index_name_prefix": "movie-",
+                "date_rounding": "d",
+                "timezone": "UTC",
+                "date_formats": [
+                    "uuuu-MM-dd'T'HH:mm:ssX",
+                    "uuuu-MM-dd'T'HH:mm:ss.SSSX",
+                    "yyyy-MM-dd'T'HH:mm:ssZ",
+                    "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+                ]
+            }
+        },
+        {
+            "date": {
+                "field": "watched_at",
+                "timezone": "UTC",
+                "formats": [
+                    "uuuu-MM-dd'T'HH:mm:ssX",
+                    "uuuu-MM-dd'T'HH:mm:ss.SSSX",
+                    "yyyy-MM-dd'T'HH:mm:ssZ",
+                    "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+                ],
+                "target_field": "@timestamp"
+            }
+        },
+        {
+            "date": {
+                "field": "watched_at",
+                "timezone": "UTC",
+                "formats": [
+                    "uuuu-MM-dd'T'HH:mm:ssX",
+                    "uuuu-MM-dd'T'HH:mm:ss.SSSX",
+                    "yyyy-MM-dd'T'HH:mm:ssZ",
+                    "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+                ],
+                "target_field": "watched_at"
+            }
+        },
+        {
+            "uppercase": {
+                "field": "movie_name"
+            }
+        },
+        {
+            "rename": {
+                "field": "year",
+                "target_field": "release_year",
+                "ignore_missing": true
+            }
+        },
+        {
+            "set": {
+                "field": "app_name",
+                "value": "Netflix"
+            }
+        },
+        {
+            "remove": {
+                "field": "liked",
+                "ignore_missing": true
+            }
+        }
+    ]
+}
+
+
+POST movie/_doc?pipeline=movie-pipeline-daily
+{
+  "movie_name": "Jumanji",
+  "year": 1995,
+  "watched_at": "2021-07-14T12:10:30Z"
+}
+
+POST movie/_doc?pipeline=movie-pipeline-daily
+{
+  "movie_name": "Jurassic Park",
+  "year": 1993,
+  "watched_at": "2021-07-15T12:10:30Z"
+}
+
+POST movie/_doc?pipeline=movie-pipeline-daily
+{
+  "movie_name": "Titanic",
+  "year": 1997,
+  "watched_at": "2021-07-16T12:10:30Z"
+}
+
+GET _cat/indices
+
+GET _snapshot/bkp-repo/_all?pretty
+
+DELETE _snapshot/bkp-repo/movie-2021-07-15
+
+
+POST _snapshot/bkp-repo/my-snapshot-2021.07.18-05:14:44.521/_restore
+{
+  "indices": "movie-2021-07-15"
+}
+
+GET movie-2021-07-15
+GET movie-2021-07-15/_search
