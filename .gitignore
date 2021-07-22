@@ -26,4 +26,3 @@ terraform.rc
 
 # Mac
 .DS_Store
-saml-metadata.xml
