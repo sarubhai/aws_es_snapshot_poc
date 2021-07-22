@@ -5,7 +5,7 @@
 resource "aws_cloudwatch_event_rule" "event_rule_snapshot_expiry" {
   name                = "event-rule-snapshot-expiry"
   description         = "Schedule ES Snapshot Backup Expiry"
-  schedule_expression = "cron(0 22 * * *)"
+  schedule_expression = "cron(0 22 * * * *)"
   is_enabled          = true
 
   tags = {

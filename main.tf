@@ -111,7 +111,7 @@ resource "aws_elasticsearch_domain_saml_options" "example" {
 
     idp {
       entity_id        = var.saml_entity_id
-      metadata_content = file("${path.module}/saml-metadata.xml")
+      metadata_content = var.saml_metadata_xml
     }
 
     master_user_name        = var.saml_master_user_name

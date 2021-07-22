@@ -68,6 +68,10 @@ variable "saml_entity_id" {
   description = "The unique Entity ID of the application in SAML Identity Provider."
 }
 
+variable "saml_metadata_xml" {
+  description = "The Metadata of the SAML application in xml format."
+}
+
 variable "saml_master_user_name" {
   description = "The SAML Master Username of Elasticsearch."
   default     = "elastic"

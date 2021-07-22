@@ -5,7 +5,7 @@
 resource "aws_cloudwatch_event_rule" "event_rule_snapshot_backup" {
   name                = "event-rule-snapshot-backup"
   description         = "Schedule ES Snapshot Backup Creation"
-  schedule_expression = "cron(0 20 * * *)"
+  schedule_expression = "cron(0 20 * * * *)"
   is_enabled          = true
 
   tags = {
