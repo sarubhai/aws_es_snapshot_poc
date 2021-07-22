@@ -66,7 +66,7 @@ GET movie-2021-07-15/_search
 
 
 # Delete Manual Snapshot
-DELETE _snapshot/bkp-repo/movies-2021-07-15
+DELETE _snapshot/bkp-repo/movie-2021-07-15
 
 # Confirm Manual Snapshots deleted
 GET _snapshot/bkp-repo/_all?pretty
