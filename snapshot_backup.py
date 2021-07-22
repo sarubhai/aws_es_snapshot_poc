@@ -13,7 +13,7 @@ def lambda_handler(event, context):
   # Create ES Snapshot Backup for daily indices for Index template movie
   yesterday = (datetime.now() - timedelta(1)).strftime('%Y-%m-%d')
   index_name = "movie-" + yesterday
-  url     = elastic_hostname + "_snapshot/bkp-repo/" + index_name
+  url     = elastic_hostname + "/_snapshot/bkp-repo/" + index_name
   headers = {"Content-Type": "application/json", "kbn-xsrf": "true"}
   payload = {
     "indices": index_name,
