@@ -1,10 +1,10 @@
-# Name: lambda_function.tf
+# Name: lambda_snapshot_setup.tf
 # Owner: Saurav Mitra
-# Description: This terraform config will create lambda function to setup Elasticsearch Backup to S3
+# Description: This terraform config will create lambda function to setup Elasticsearch S3 based Snapshot Repository
 
-resource "aws_lambda_function" "lambda_es_backup" {
-  function_name = "lambda-es-backup"
-  description   = "Setup Elasticsearch Backup to S3"
+resource "aws_lambda_function" "lambda_snapshot_setup" {
+  function_name = "lambda-snapshot-setup"
+  description   = "Setup Elasticsearch Snapshot to S3"
   memory_size   = 128
   timeout       = 120
   runtime       = "python3.7"
@@ -16,9 +16,9 @@ resource "aws_lambda_function" "lambda_es_backup" {
   }
 
   layers           = [aws_lambda_layer_version.requests_layer.arn, aws_lambda_layer_version.requests_aws4auth_layer.arn]
-  filename         = "lambda_function.zip"
-  source_code_hash = filebase64sha256("lambda_function.zip")
-  handler          = "lambda_function.lambda_handler"
+  filename         = "snapshot_setup.zip"
+  source_code_hash = filebase64sha256("snapshot_setup.zip")
+  handler          = "snapshot_setup.lambda_handler"
 
   environment {
     variables = {
@@ -33,13 +33,13 @@ resource "aws_lambda_function" "lambda_es_backup" {
   }
 
   tags = {
-    Name  = "${var.prefix}-lambda-es-backup"
+    Name  = "${var.prefix}-lambda-snapshot-setup"
     Owner = var.owner
   }
 }
 
-resource "aws_lambda_function_event_invoke_config" "lambda_event_invoke" {
-  function_name          = aws_lambda_function.lambda_es_backup.function_name
+resource "aws_lambda_function_event_invoke_config" "lambda_snapshot_setup_invoke" {
+  function_name          = aws_lambda_function.lambda_snapshot_setup.function_name
   maximum_retry_attempts = 0
   qualifier              = "$LATEST"
 }

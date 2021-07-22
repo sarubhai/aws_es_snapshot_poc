@@ -42,7 +42,8 @@ def lambda_handler(event, context):
       "bucket": s3_bucket,
       "region": region,
       # "endpoint": "s3.amazonaws.com"
-      "role_arn": snapshot_role_arn
+      "role_arn": snapshot_role_arn,
+      "server_side_encryption": True
     }
   }
   
