@@ -2,6 +2,12 @@
 # Owner: Saurav Mitra
 # Description: This terraform config will create lambda function to setup Elasticsearch S3 based Snapshot Repository
 
+data "archive_file" "snapshot_setup" {
+  type        = "zip"
+  source_file = "${path.module}/snapshot_setup.py"
+  output_path = "${path.module}/snapshot_setup.zip"
+}
+
 resource "aws_lambda_function" "lambda_snapshot_setup" {
   function_name = "lambda-snapshot-setup"
   description   = "Setup Elasticsearch Snapshot to S3"
@@ -16,8 +22,8 @@ resource "aws_lambda_function" "lambda_snapshot_setup" {
   }
 
   layers           = [aws_lambda_layer_version.requests_layer.arn, aws_lambda_layer_version.requests_aws4auth_layer.arn]
-  filename         = "snapshot_setup.zip"
-  source_code_hash = filebase64sha256("snapshot_setup.zip")
+  filename         = data.archive_file.snapshot_setup.output_path
+  source_code_hash = data.archive_file.snapshot_setup.output_base64sha256
   handler          = "snapshot_setup.lambda_handler"
 
   environment {
@@ -42,4 +48,10 @@ resource "aws_lambda_function_event_invoke_config" "lambda_snapshot_setup_invoke
   function_name          = aws_lambda_function.lambda_snapshot_setup.function_name
   maximum_retry_attempts = 0
   qualifier              = "$LATEST"
+}
+
+resource "aws_cloudwatch_log_group" "log_snapshot_setup" {
+  name = "/aws/lambda/${aws_lambda_function.lambda_snapshot_setup.function_name}"
+
+  retention_in_days = 7
 }

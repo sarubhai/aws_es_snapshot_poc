@@ -2,6 +2,12 @@
 # Owner: Saurav Mitra
 # Description: This terraform config will create lambda function to delete Elasticsearch Snapshot Backup
 
+data "archive_file" "snapshot_expiry" {
+  type        = "zip"
+  source_file = "${path.module}/snapshot_expiry.py"
+  output_path = "${path.module}/snapshot_expiry.zip"
+}
+
 resource "aws_lambda_function" "lambda_snapshot_expiry" {
   function_name = "lambda-snapshot-expiry"
   description   = "Delete Elasticsearch Snapshot Backup"
@@ -16,8 +22,8 @@ resource "aws_lambda_function" "lambda_snapshot_expiry" {
   }
 
   layers           = [aws_lambda_layer_version.requests_layer.arn, aws_lambda_layer_version.requests_aws4auth_layer.arn]
-  filename         = "snapshot_expiry.zip"
-  source_code_hash = filebase64sha256("snapshot_expiry.zip")
+  filename         = data.archive_file.snapshot_backup.output_path
+  source_code_hash = data.archive_file.snapshot_backup.output_base64sha256
   handler          = "snapshot_expiry.lambda_handler"
 
   environment {
@@ -39,4 +45,10 @@ resource "aws_lambda_function_event_invoke_config" "lambda_snapshot_expiry_invok
   function_name          = aws_lambda_function.lambda_snapshot_expiry.function_name
   maximum_retry_attempts = 0
   qualifier              = "$LATEST"
+}
+
+resource "aws_cloudwatch_log_group" "log_snapshot_expiry" {
+  name = "/aws/lambda/${aws_lambda_function.lambda_snapshot_expiry.function_name}"
+
+  retention_in_days = 7
 }
