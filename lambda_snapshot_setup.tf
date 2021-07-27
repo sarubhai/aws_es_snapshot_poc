@@ -51,7 +51,11 @@ resource "aws_lambda_function_event_invoke_config" "lambda_snapshot_setup_invoke
 }
 
 resource "aws_cloudwatch_log_group" "log_snapshot_setup" {
-  name = "/aws/lambda/${aws_lambda_function.lambda_snapshot_setup.function_name}"
-
+  name              = "/aws/lambda/${aws_lambda_function.lambda_snapshot_setup.function_name}"
   retention_in_days = 7
+
+  tags = {
+    Name  = "${var.prefix}-log-lambda-snapshot-setup"
+    Owner = var.owner
+  }
 }
